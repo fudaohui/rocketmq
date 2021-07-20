@@ -69,7 +69,15 @@ public class NamesrvStartup {
         return null;
     }
 
+    /**
+     * 创建NamesrvController
+     * @param args
+     * @return
+     * @throws IOException
+     * @throws JoranException
+     */
     public static NamesrvController createNamesrvController(String[] args) throws IOException, JoranException {
+        //版本信息
         System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
         //PackageConflictDetect.detectFastjson();
 
@@ -80,6 +88,7 @@ public class NamesrvStartup {
             return null;
         }
 
+        //核心两个关键的配置类
         final NamesrvConfig namesrvConfig = new NamesrvConfig();
         final NettyServerConfig nettyServerConfig = new NettyServerConfig();
         nettyServerConfig.setListenPort(9876);
