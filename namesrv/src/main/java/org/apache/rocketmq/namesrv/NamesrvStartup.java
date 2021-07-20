@@ -51,6 +51,7 @@ public class NamesrvStartup {
         main0(args);
     }
 
+    //启动类
     public static NamesrvController main0(String[] args) {
 
         try {
@@ -58,6 +59,7 @@ public class NamesrvStartup {
             start(controller);
             String tip = "The Name Server boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
             log.info(tip);
+            log.info("333323");
             System.out.printf("%s%n", tip);
             return controller;
         } catch (Throwable e) {

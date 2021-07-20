@@ -49,6 +49,8 @@ public class Consumer {
          * </pre>
          */
 
+        //设置nameserver地址
+        consumer.setNamesrvAddr("localhost:9876");
         /*
          * Specify where to start in case the specified consumer group is a brand new one.
          */

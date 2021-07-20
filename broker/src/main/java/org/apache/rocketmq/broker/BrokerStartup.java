@@ -57,8 +57,6 @@ public class BrokerStartup {
     public static void main(String[] args) {
         start(createBrokerController(args));
     }
-
-    //启动类
     public static BrokerController start(BrokerController controller) {
         try {
 
