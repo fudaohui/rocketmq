@@ -197,6 +197,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
         ServerBootstrap childHandler =
             this.serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupSelector)
+                    //如果是linux，则使用epoll的IO多路复用模型
                 .channel(useEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, 1024)
                 .option(ChannelOption.SO_REUSEADDR, true)

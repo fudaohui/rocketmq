@@ -84,16 +84,16 @@ public class NamesrvController {
 
         this.registerProcessor();
 
+        //定时任务每10秒扫描一次不活跃的broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
             @Override
             public void run() {
                 NamesrvController.this.routeInfoManager.scanNotActiveBroker();
             }
         }, 5, 10, TimeUnit.SECONDS);
 
+        //每10分钟打印一次配置的KV参数值，实际就是nameserverconfig的值
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-
             @Override
             public void run() {
                 NamesrvController.this.kvConfigManager.printAllPeriodically();

@@ -19,12 +19,14 @@ package org.apache.rocketmq.namesrv;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
+
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.concurrent.Callable;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -55,6 +57,7 @@ public class NamesrvStartup {
     public static NamesrvController main0(String[] args) {
 
         try {
+            //主要就是初始化nameservrconfig和nerrtyserverconfig
             NamesrvController controller = createNamesrvController(args);
             start(controller);
             String tip = "The Name Server boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
@@ -71,6 +74,7 @@ public class NamesrvStartup {
 
     /**
      * 创建NamesrvController
+     *
      * @param args
      * @return
      * @throws IOException
@@ -88,10 +92,12 @@ public class NamesrvStartup {
             return null;
         }
 
-        //核心两个关键的配置类
+        //初始化NameServer的配置
         final NamesrvConfig namesrvConfig = new NamesrvConfig();
+        //初始化NettyServer的配置
         final NettyServerConfig nettyServerConfig = new NettyServerConfig();
         nettyServerConfig.setListenPort(9876);
+        //两个命令行参数，可以不管
         if (commandLine.hasOption('c')) {
             String file = commandLine.getOptionValue('c');
             if (file != null) {
@@ -115,6 +121,7 @@ public class NamesrvStartup {
             System.exit(0);
         }
 
+        //如果命令行有参数，将参数配置到namesrvConfig中
         MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), namesrvConfig);
 
         if (null == namesrvConfig.getRocketmqHome()) {
@@ -130,7 +137,9 @@ public class NamesrvStartup {
 
         log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
 
+        //打印namesrvConfig配置的参数，注：需要在logback_namesrv.xml中将引用到的其他服务的日志开关打开
         MixAll.printObjectProperties(log, namesrvConfig);
+        //打印nettyServerConfig的配置
         MixAll.printObjectProperties(log, nettyServerConfig);
 
         final NamesrvController controller = new NamesrvController(namesrvConfig, nettyServerConfig);
@@ -153,6 +162,7 @@ public class NamesrvStartup {
             System.exit(-3);
         }
 
+        //虚拟机钩子，正常关闭的时候需要释放资源
         Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(log, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
