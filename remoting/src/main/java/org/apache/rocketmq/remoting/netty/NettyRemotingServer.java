@@ -181,6 +181,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
     @Override
     public void start() {
+        //这里使用DefaultEventExecutorGroup 来处理自定义的handler，怎么使用可以参考ChannelPipleLine
         this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(
             nettyServerConfig.getServerWorkerThreads(),
             new ThreadFactory() {
