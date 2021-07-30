@@ -378,6 +378,7 @@ public abstract class NettyRemotingAbstract {
     /**
      * <p>
      * This method is periodically invoked to scan and expire deprecated request.
+     *  定期扫描并过期废弃（实际是超时）的请求
      * </p>
      */
     public void scanResponseTable() {

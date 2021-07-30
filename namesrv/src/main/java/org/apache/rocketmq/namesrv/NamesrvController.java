@@ -153,8 +153,10 @@ public class NamesrvController {
     }
 
     public void start() throws Exception {
+        //netty server startUP
         this.remotingServer.start();
 
+        //暂时不知道有什么用
         if (this.fileWatchService != null) {
             this.fileWatchService.start();
         }
