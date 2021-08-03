@@ -73,6 +73,15 @@ public class NamesrvController {
         this.configuration.setStorePathFromConfig(this.namesrvConfig, "configStorePath");
     }
 
+    /**
+     * namesrv初始化
+     * 1、加载KV配置文件的值；
+     * 2、初始化NettyRemotingServer；
+     * 3、注册处理器；
+     * 4、初始化定时任务，定时扫描不活跃的broker；定时打印配置的KV参数值；
+     * 5、TLS安全模式，暂时不懂，先不深究
+     * @return
+     */
     public boolean initialize() {
 
         this.kvConfigManager.load();

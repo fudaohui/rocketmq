@@ -59,6 +59,7 @@ public class NamesrvStartup {
         try {
             //主要就是初始化nameservrconfig和nerrtyserverconfig
             NamesrvController controller = createNamesrvController(args);
+            //NameSrv启动
             start(controller);
             String tip = "The Name Server boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
             log.info(tip);
