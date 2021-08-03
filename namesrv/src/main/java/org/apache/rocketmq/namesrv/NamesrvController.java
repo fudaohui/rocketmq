@@ -84,13 +84,17 @@ public class NamesrvController {
      */
     public boolean initialize() {
 
+        //加载配置的kv值
         this.kvConfigManager.load();
 
+        //初始化boss,work线程池，回调线程池
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
+        // TODO: 2021/8/3 0003  
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
+        // TODO: 2021/8/3 0003  
         this.registerProcessor();
 
         //定时任务每10秒扫描一次不活跃的broker
