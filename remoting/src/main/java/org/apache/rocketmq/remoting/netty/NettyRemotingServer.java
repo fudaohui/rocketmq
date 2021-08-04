@@ -250,6 +250,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         }
 
         if (this.channelEventListener != null) {
+            //服务线程池，调用NettyRemotingAbstract中的run方法
             this.nettyEventExecutor.start();
         }
 
@@ -363,12 +364,16 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     }
 
     private void prepareSharableHandlers() {
+        // TODO: 2021/8/4 TCP TLS加密待研究
         handshakeHandler = new HandshakeHandler(TlsSystemConfig.tlsMode);
         encoder = new NettyEncoder();
         connectionManageHandler = new NettyConnectManageHandler();
         serverHandler = new NettyServerHandler();
     }
 
+    /**
+     * 该Sharable
+     */
     @ChannelHandler.Sharable
     class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
@@ -384,12 +389,13 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
 
             // mark the current position so that we can peek the first byte to determine if the content is starting with
-            // TLS handshake
+            // 1、TLS handshake
             msg.markReaderIndex();
 
+            //2、
             byte b = msg.getByte(0);
 
-            if (b == HANDSHAKE_MAGIC_CODE) {
+            if (b == HANDSHAKE_MAGIC_CODE) {//握手码
                 switch (tlsMode) {
                     case DISABLED:
                         ctx.close();
@@ -399,6 +405,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                     case ENFORCING:
                         if (null != sslContext) {
                             ctx.pipeline()
+                                    //如果支持TSL加密在HANDSHAKE_HANDLER_NAME之后插入TLS_HANDLER_NAME的handler
                                     .addAfter(defaultEventExecutorGroup, HANDSHAKE_HANDLER_NAME, TLS_HANDLER_NAME, sslContext.newHandler(ctx.channel().alloc()))
                                     .addAfter(defaultEventExecutorGroup, TLS_HANDLER_NAME, FILE_REGION_ENCODER_NAME, new FileRegionEncoder());
                             log.info("Handlers prepended to channel pipeline to establish SSL connection");
@@ -418,9 +425,11 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             }
 
             // reset the reader index so that handshake negotiation may proceed as normal.
+            //和步骤1，2对应，重置读游标
             msg.resetReaderIndex();
 
             try {
+                // TODO: 2021/8/4  why remore this?
                 // Remove this handler
                 ctx.pipeline().remove(this);
             } catch (NoSuchElementException e) {
@@ -435,6 +444,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     /**
      * 入站数据处理，最后一个handler
      */
+    // TODO: 2021/8/4 为什么一进来就是RemotingCommand
     @ChannelHandler.Sharable
     class NettyServerHandler extends SimpleChannelInboundHandler<RemotingCommand> {
 
@@ -445,7 +455,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
     }
 
     /**
-     * 连接管理handler，同时支持入站和出战事件
+     * 连接管理handler，同时支持入站和出站事件
      */
     @ChannelHandler.Sharable
     class NettyConnectManageHandler extends ChannelDuplexHandler {

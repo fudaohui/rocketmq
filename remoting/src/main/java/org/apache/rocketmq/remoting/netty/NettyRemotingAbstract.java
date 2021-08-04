@@ -577,6 +577,9 @@ public abstract class NettyRemotingAbstract {
             }
         }
 
+        /**
+         * 处理链接关闭空闲异常的链路的事件
+         */
         @Override
         public void run() {
             log.info(this.getServiceName() + " service started");
