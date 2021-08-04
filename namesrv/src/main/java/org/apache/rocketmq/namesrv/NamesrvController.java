@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.rocketmq.common.Configuration;
 import org.apache.rocketmq.common.ThreadFactoryImpl;
 import org.apache.rocketmq.common.constant.LoggerName;
@@ -47,7 +48,7 @@ public class NamesrvController {
     private final NettyServerConfig nettyServerConfig;
 
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl(
-        "NSScheduledThread"));
+            "NSScheduledThread"));
     private final KVConfigManager kvConfigManager;
     private final RouteInfoManager routeInfoManager;
 
@@ -67,8 +68,8 @@ public class NamesrvController {
         this.routeInfoManager = new RouteInfoManager();
         this.brokerHousekeepingService = new BrokerHousekeepingService(this);
         this.configuration = new Configuration(
-            log,
-            this.namesrvConfig, this.nettyServerConfig
+                log,
+                this.namesrvConfig, this.nettyServerConfig
         );
         this.configuration.setStorePathFromConfig(this.namesrvConfig, "configStorePath");
     }
@@ -80,6 +81,7 @@ public class NamesrvController {
      * 3、注册处理器；
      * 4、初始化定时任务，定时扫描不活跃的broker；定时打印配置的KV参数值；
      * 5、TLS安全模式，暂时不懂，先不深究
+     *
      * @return
      */
     public boolean initialize() {
@@ -90,11 +92,11 @@ public class NamesrvController {
         //初始化boss,work线程池，回调线程池
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
-        // TODO: 2021/8/3 0003  
+        // 创建执行器线程池，给registerProcessor使用
         this.remotingExecutor =
-            Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
+                Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
-        // TODO: 2021/8/3 0003  
+//        注册处理器，这里把处理器和线程池绑定为“一对”Pair
         this.registerProcessor();
 
         //定时任务每10秒扫描一次不活跃的broker
@@ -117,35 +119,37 @@ public class NamesrvController {
             // Register a listener to reload SslContext
             try {
                 fileWatchService = new FileWatchService(
-                    new String[] {
-                        TlsSystemConfig.tlsServerCertPath,
-                        TlsSystemConfig.tlsServerKeyPath,
-                        TlsSystemConfig.tlsServerTrustCertPath
-                    },
-                    new FileWatchService.Listener() {
-                        boolean certChanged, keyChanged = false;
-                        @Override
-                        public void onChanged(String path) {
-                            if (path.equals(TlsSystemConfig.tlsServerTrustCertPath)) {
-                                log.info("The trust certificate changed, reload the ssl context");
-                                reloadServerSslContext();
+                        new String[]{
+                                TlsSystemConfig.tlsServerCertPath,
+                                TlsSystemConfig.tlsServerKeyPath,
+                                TlsSystemConfig.tlsServerTrustCertPath
+                        },
+                        new FileWatchService.Listener() {
+                            boolean certChanged, keyChanged = false;
+
+                            @Override
+                            public void onChanged(String path) {
+                                if (path.equals(TlsSystemConfig.tlsServerTrustCertPath)) {
+                                    log.info("The trust certificate changed, reload the ssl context");
+                                    reloadServerSslContext();
+                                }
+                                if (path.equals(TlsSystemConfig.tlsServerCertPath)) {
+                                    certChanged = true;
+                                }
+                                if (path.equals(TlsSystemConfig.tlsServerKeyPath)) {
+                                    keyChanged = true;
+                                }
+                                if (certChanged && keyChanged) {
+                                    log.info("The certificate and private key changed, reload the ssl context");
+                                    certChanged = keyChanged = false;
+                                    reloadServerSslContext();
+                                }
                             }
-                            if (path.equals(TlsSystemConfig.tlsServerCertPath)) {
-                                certChanged = true;
+
+                            private void reloadServerSslContext() {
+                                ((NettyRemotingServer) remotingServer).loadSslContext();
                             }
-                            if (path.equals(TlsSystemConfig.tlsServerKeyPath)) {
-                                keyChanged = true;
-                            }
-                            if (certChanged && keyChanged) {
-                                log.info("The certificate and private key changed, reload the ssl context");
-                                certChanged = keyChanged = false;
-                                reloadServerSslContext();
-                            }
-                        }
-                        private void reloadServerSslContext() {
-                            ((NettyRemotingServer) remotingServer).loadSslContext();
-                        }
-                    });
+                        });
             } catch (Exception e) {
                 log.warn("FileWatchService created error, can't load the certificate dynamically");
             }
@@ -154,19 +158,22 @@ public class NamesrvController {
         return true;
     }
 
+    /**
+     * 注册处理器，这里把处理器和线程池绑定为“一对”Pair
+     */
     private void registerProcessor() {
         if (namesrvConfig.isClusterTest()) {
 
             this.remotingServer.registerDefaultProcessor(new ClusterTestRequestProcessor(this, namesrvConfig.getProductEnvName()),
-                this.remotingExecutor);
-        } else {
+                    this.remotingExecutor);
+        } else {//默认不开启集群测试
 
             this.remotingServer.registerDefaultProcessor(new DefaultRequestProcessor(this), this.remotingExecutor);
         }
     }
-
+    //NameServer启动
     public void start() throws Exception {
-        //netty server startUP
+        //netty server startUp
         this.remotingServer.start();
 
         //暂时不知道有什么用

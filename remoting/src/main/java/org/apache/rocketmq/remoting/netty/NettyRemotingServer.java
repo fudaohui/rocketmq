@@ -206,6 +206,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                     }
                 });
 
+        // TODO: 2021/8/4 0004
         //准备netty server的handler，注意shareable类型的都是线程安全的
         prepareSharableHandlers();
 
